@@ -1,5 +1,9 @@
-streamlit
-yfinance
-pandas
-numpy
-streamlit-lightweight-charts
+# Minimal production dependencies - only what's actually used
+streamlit==1.40.1
+yfinance==0.2.61
+pandas==2.0.3
+numpy==1.24.4
+streamlit-lightweight-charts==0.7.20
+ta==0.11.0
+pytz==2025.2
+psutil==5.9.0

@@ -5,8 +5,21 @@ import pandas as pd
 import numpy as np
 import traceback
 import pytz
+import os
+import logging
+import time
 from datetime import datetime, timedelta
 from streamlit_lightweight_charts import renderLightweightCharts
+
+# Configure logging for production
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log') if os.path.exists('/app') else logging.NullHandler()
+    ]
+)
 
 try:
     import ta
@@ -25,29 +38,82 @@ st.set_page_config(
 # Load stock names from JSON file
 @st.cache_data
 def load_stock_names():
-    with open('stock_names.json', 'r') as f:
-        return json.load(f)
+    try:
+        with open('stock_names.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error("Stock names file not found. Please ensure stock_names.json is present.")
+        return {"Sample Stock": "SAMPLESTOCK.NS"}
+    except json.JSONDecodeError:
+        st.error("Invalid JSON format in stock_names.json")
+        return {"Sample Stock": "SAMPLESTOCK.NS"}
+    except Exception as e:
+        st.error(f"Error loading stock names: {str(e)}")
+        return {"Sample Stock": "SAMPLESTOCK.NS"}
 
-# Function to get stock data
-@st.cache_data
+# Function to get stock data with enhanced error handling
+@st.cache_data(ttl=300)  # Cache for 5 minutes to avoid rate limiting
 def get_stock_data(symbol, start_date, end_date, interval):
     try:
+        # Add rate limiting protection
+        if 'last_api_call' in st.session_state:
+            import time
+            time_since_last = time.time() - st.session_state.last_api_call
+            if time_since_last < 1:  # Minimum 1 second between API calls
+                time.sleep(1 - time_since_last)
+        
         stock = yf.Ticker(symbol)
         data = stock.history(start=start_date, end=end_date, interval=interval)
+        
+        st.session_state.last_api_call = time.time()
+        
+        if data.empty:
+            st.warning(f"No data available for {symbol} in the selected date range.")
+            return None, None
+            
+        # Basic data validation
+        if len(data) < 2:
+            st.warning(f"Insufficient data points for {symbol}. Try a longer date range.")
+            return None, None
+            
         return data, stock.info
+        
     except Exception as e:
-        st.error(f"Error fetching data: {str(e)}")
+        error_msg = str(e)
+        if "404" in error_msg or "No data found" in error_msg:
+            st.error(f"Stock symbol '{symbol}' not found. Please verify the symbol.")
+        elif "Too Many Requests" in error_msg or "rate limit" in error_msg.lower():
+            st.error("Rate limit exceeded. Please wait a moment and try again.")
+        elif "timeout" in error_msg.lower():
+            st.error("Request timeout. Please check your internet connection and try again.")
+        else:
+            st.error(f"Error fetching data for {symbol}: {error_msg}")
         return None, None
 
 # Technical Analysis Functions
 def calculate_moving_averages(data):
-    """Calculate various moving averages"""
-    data['MA_20'] = data['Close'].rolling(window=20).mean()
-    data['MA_50'] = data['Close'].rolling(window=50).mean()
-    data['MA_200'] = data['Close'].rolling(window=200).mean()
-    data['EMA_12'] = data['Close'].ewm(span=12).mean()
-    data['EMA_26'] = data['Close'].ewm(span=26).mean()
-    return data
+    """Calculate various moving averages with safety checks"""
+    if data is None or data.empty:
+        return data
+        
+    try:
+        # Ensure we have enough data points
+        min_periods = min(20, len(data) // 2)
+        data['MA_20'] = data['Close'].rolling(window=20, min_periods=min_periods).mean()
+        
+        min_periods_50 = min(50, len(data) // 2)
+        data['MA_50'] = data['Close'].rolling(window=50, min_periods=min_periods_50).mean()
+        
+        min_periods_200 = min(200, len(data) // 2)
+        data['MA_200'] = data['Close'].rolling(window=200, min_periods=min_periods_200).mean()
+        
+        data['EMA_12'] = data['Close'].ewm(span=12, min_periods=min(12, len(data))).mean()
+        data['EMA_26'] = data['Close'].ewm(span=26, min_periods=min(26, len(data))).mean()
+        
+        return data
+    except Exception as e:
+        st.warning(f"Error calculating moving averages: {str(e)}")
+        return data
 
 def prepare_candlestick_data(data):
     """Convert pandas dataframe to format required by lightweight-charts"""
