@@ -1,5 +1,5 @@
-# Use Python 3.8 slim image for better performance
-FROM python:3.8-slim
+# Use Python 3.11 slim image for better performance and compatibility
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

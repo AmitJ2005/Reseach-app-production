@@ -57,7 +57,6 @@ def get_stock_data(symbol, start_date, end_date, interval):
     try:
         # Add rate limiting protection
         if 'last_api_call' in st.session_state:
-            import time
             time_since_last = time.time() - st.session_state.last_api_call
             if time_since_last < 1:  # Minimum 1 second between API calls
                 time.sleep(1 - time_since_last)
@@ -639,18 +638,17 @@ def main():    # TradingView-style CSS
             padding-top: 0 !important;
         }
         </style>
-        """, unsafe_allow_html=True)
-
-        # --- Compact Stock Select ---
+        """, unsafe_allow_html=True)        # --- Compact Stock Select ---
         st.markdown("#### 🔍 Stock")
         stock_options = [f"{name} ({symbol})" for name, symbol in stock_names.items()]
         default_index = 0
         selected = st.selectbox(
-            "",
+            "Select Stock",
             options=stock_options,
             index=default_index,
             key="stock_selectbox",
-            help="Type to filter, then select with mouse or keyboard."
+            help="Type to filter, then select with mouse or keyboard.",
+            label_visibility="collapsed"
         )
         selected_stock_name = selected.split(" (")[0]
         selected_symbol = selected.split("(")[-1].replace(")", "")
@@ -672,12 +670,10 @@ def main():    # TradingView-style CSS
                 max_value=datetime.now().date(),
                 min_value=start_date,
                 key="end_date"
-            )
-
-        # --- Compact Timeframe ---
+            )        # --- Compact Timeframe ---
         st.markdown("#### ⏱ Interval")
         timeframe = st.selectbox(
-            "",
+            "Select Interval",
             options=["1m", "5m", "15m", "30m", "60m", "1d", "5d", "1wk"],
             index=2,
             format_func=lambda x: {
@@ -685,16 +681,16 @@ def main():    # TradingView-style CSS
                 "30m": "30 Min", "60m": "1 Hour", "1d": "1 Day",
                 "5d": "5 Days", "1wk": "1 Week"
             }[x],
-            key="timeframe"
-        )
-
-        # --- Compact Indicators ---
+            key="timeframe",
+            label_visibility="collapsed"
+        )        # --- Compact Indicators ---
         st.markdown("#### 📊 Indicators")
         indicators = st.multiselect(
-            "",
+            "Select Indicators",
             options=["MA", "RSI", "MACD", "Volume", "Bollinger Bands"],
             default=["MA", "Volume"],
-            key="indicators"
+            key="indicators",
+            label_visibility="collapsed"
         )
 
         # --- Compact Time Filter ---
