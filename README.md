@@ -1,27 +1,51 @@
-# 📈 TradingView Pro Stock Analysis
+<p align="center">
+  <img src="https://img.shields.io/badge/Streamlit-Stock%20Analysis-blueviolet?style=for-the-badge&logo=streamlit" alt="Streamlit Badge" />
+  <img src="https://img.shields.io/github/stars/AmitJ2005/Reseach-app-production?style=for-the-badge" alt="GitHub stars" />
+  <img src="https://img.shields.io/github/license/AmitJ2005/Reseach-app-production?style=for-the-badge" alt="License" />
+  <a href="https://researchstock.streamlit.app/">
+    <img src="https://img.shields.io/badge/Live%20Demo-Online-green?style=for-the-badge&logo=streamlit" alt="Live Demo" />
+  </a>
+</p>
 
-A professional-grade stock analysis application built with Streamlit, featuring TradingView-style charts and comprehensive technical analysis tools.
+# 📈 Stock Chart Analysis
+
+<p align="center">
+  <b>A modern, professional-grade stock analysis app with TradingView-style charts, technical indicators, and real-time data.</b><br>
+  <a href="https://researchstock.streamlit.app/">🌐 Live Demo</a> ·
+  <a href="https://github.com/AmitJ2005/Reseach-app-production">GitHub</a>
+</p>
+
+---
 
 ## 🚀 Features
 
-- **Interactive Charts**: TradingView-style candlestick charts with zoom and pan capabilities
-- **Technical Indicators**: Moving Averages, RSI, MACD, Bollinger Bands, Volume Analysis
-- **Multi-Timeframe Support**: 1m, 5m, 15m, 30m, 1h, 1d, 5d, 1w intervals
-- **Intraday Analysis**: Custom time range filtering for detailed session analysis
-- **Real-time Data**: Live stock data via Yahoo Finance API
-- **Export Functionality**: Download data as CSV
-- **Responsive Design**: Mobile-friendly interface
+<div align="center">
+
+| 📊 Interactive Charts | 🧮 Technical Indicators | ⏱️ Multi-Timeframe | 🔄 Real-time Data | 📥 Export CSV | 📱 Responsive |
+|:---------------------:|:----------------------:|:------------------:|:-----------------:|:-------------:|:-------------:|
+| Candlestick, Zoom/Pan | MA, RSI, MACD, BB, Vol | 1m–1w, Intraday    | Yahoo Finance API | Downloadable  | Mobile Ready  |
+
+</div>
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Streamlit, Lightweight Charts
-- **Data**: Yahoo Finance (yfinance), Pandas, NumPy
-- **Technical Analysis**: TA-Lib, Custom indicators
-- **Deployment**: Docker, Docker Compose
+<details>
+<summary><b>Show Details</b></summary>
+
+- <b>Frontend:</b> Streamlit, Lightweight Charts
+- <b>Data:</b> Yahoo Finance (yfinance), Pandas, NumPy
+- <b>Technical Analysis:</b> TA-Lib, Custom indicators
+- <b>Deployment:</b> Docker, Docker Compose
+
+</details>
+
+---
 
 ## 📦 Quick Start
 
-### Using Docker (Recommended)
+### 🚢 Using Docker (Recommended)
 
 ```bash
 # Clone the repository
@@ -44,23 +68,6 @@ pip install -r requirements.txt
 streamlit run working1.py
 ```
 
-## 🚀 Deployment
-
-### Streamlit Cloud (Easiest)
-1. Fork this repository
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub account
-4. Deploy directly from the repository
-
-### Railway
-1. Connect your repository to Railway
-2. Railway will automatically detect the Dockerfile
-3. Deploy with one click
-
-### Render
-1. Create a new Web Service on Render
-2. Connect your repository
-3. Use Docker deployment option
 
 ## 🔧 Configuration
 
@@ -74,14 +81,7 @@ streamlit run working1.py
 | `MAX_DATA_POINTS` | `10000` | Maximum data points to fetch |
 | `CHART_HEIGHT` | `580` | Chart height in pixels |
 
-### Production Settings
 
-Copy `.env.example` to `.env` and configure:
-
-```bash
-cp .env.example .env
-# Edit .env with your settings
-```
 
 ## 📊 Supported Stocks
 
@@ -150,4 +150,4 @@ For issues and support:
 
 ---
 
-**Built with ❤️ using Streamlit and Python**
+**Built with ❤️ by Amit 😊**
