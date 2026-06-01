@@ -262,6 +262,36 @@ def calculate_volume_indicators(data):
     data['Volume_Ratio'] = data['Volume'] / data['Volume_MA']
     return data
 
+def calculate_swing_points(data, lookback=3):
+    """Identify swing highs and swing lows using a centered pivot window"""
+    if data is None or data.empty:
+        return data
+
+    try:
+        window = lookback * 2 + 1
+        high_roll = data['High'].rolling(window=window, center=True)
+        low_roll = data['Low'].rolling(window=window, center=True)
+
+        swing_high_mask = data['High'].eq(high_roll.max())
+        swing_low_mask = data['Low'].eq(low_roll.min())
+
+        data['Swing_High'] = np.where(swing_high_mask, data['High'], np.nan)
+        data['Swing_Low'] = np.where(swing_low_mask, data['Low'], np.nan)
+        data['Swing'] = np.where(
+            swing_high_mask,
+            data['High'],
+            np.where(swing_low_mask, data['Low'], np.nan)
+        )
+        swing_type = pd.Series(index=data.index, dtype='object')
+        swing_type.loc[swing_high_mask] = 'High'
+        swing_type.loc[swing_low_mask] = 'Low'
+        data['Swing_Type'] = swing_type
+
+        return data
+    except Exception as e:
+        st.warning(f"Error calculating swing points: {str(e)}")
+        return data
+
 def filter_by_time_range(data, start_time, end_time):
     """Filter data by specific time range for intraday analysis"""
     if start_time is None or end_time is None:
@@ -450,6 +480,21 @@ def create_tradingview_chart(data, stock_name, indicators):
                 }
             }
             series_config.append(volume_ma_series)
+
+    # Swing points / zigzag line
+    if 'Swing' in indicators:
+        if 'Swing' in data.columns:
+            swing_data = prepare_line_data(data, 'Swing')
+            swing_series = {
+                "type": "Line",
+                "data": swing_data,
+                "options": {
+                    "color": "#fbc02d",
+                    "lineWidth": 2,
+                    "title": "Swing"
+                }
+            }
+            series_config.append(swing_series)
     
     return chart_options, series_config
 
@@ -687,8 +732,8 @@ def main():    # TradingView-style CSS
         st.markdown("#### 📊 Indicators")
         indicators = st.multiselect(
             "Select Indicators",
-            options=["MA", "RSI", "MACD", "Volume", "Bollinger Bands"],
-            default=["MA", "Volume"],
+            options=["MA", "RSI", "MACD", "Volume", "Bollinger Bands", "Swing"],
+            default=["MA", "Volume", "Swing"],
             key="indicators",
             label_visibility="collapsed"
         )
@@ -760,6 +805,8 @@ def main():    # TradingView-style CSS
                         data = calculate_bollinger_bands(data)
                     if 'Volume' in indicators:
                         data = calculate_volume_indicators(data)
+                    if 'Swing' in indicators:
+                        data = calculate_swing_points(data)
 
                 # --- COMPACT HEADER: Name + Price ---
                 current_price = data['Close'].iloc[-1]
@@ -845,9 +892,21 @@ def main():    # TradingView-style CSS
                                 else:
                                     st.info("🔴 Below MA20")
 
+                if 'Swing' in indicators and 'Swing_Type' in data.columns:
+                    latest_swing = data[data['Swing_Type'].notna()].tail(1)
+                    if not latest_swing.empty:
+                        swing_row = latest_swing.iloc[0]
+                        swing_label = swing_row['Swing_Type']
+                        swing_price = swing_row['Swing'] if not pd.isna(swing_row['Swing']) else swing_row['Close']
+                        swing_time = latest_swing.index[0]
+                        st.info(f"🟡 Latest swing {swing_label}: ₹{swing_price:.2f} at {swing_time.strftime('%Y-%m-%d %H:%M') if hasattr(swing_time, 'strftime') else swing_time}")
+
                 # --- DATA TABLE ---
                 with st.expander("📋 Data Table", expanded=False):
-                    display_data = data.tail(20)[['Open', 'High', 'Low', 'Close', 'Volume']].round(2)
+                    table_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+                    if 'Swing_Type' in data.columns:
+                        table_columns.extend(['Swing_Type', 'Swing'])
+                    display_data = data.tail(20)[table_columns].round(2)
                     st.dataframe(display_data, use_container_width=True, height=260)
                     csv = data.to_csv()
                     st.download_button(
